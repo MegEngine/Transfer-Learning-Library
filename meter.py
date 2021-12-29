@@ -15,7 +15,8 @@ class AverageMeter(object):
         >>> # Update meter after every minibatch update
         >>> losses.update(loss_value, batch_size)
     """
-    def __init__(self, name: str, fmt: Optional[str] = ':f'):
+
+    def __init__(self, name: str, fmt: Optional[str] = ":f"):
         self.name = name
         self.fmt = fmt
         self.reset()
@@ -34,15 +35,13 @@ class AverageMeter(object):
             self.avg = self.sum / self.count
 
     def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        fmtstr = "{name} {val" + self.fmt + "} ({avg" + self.fmt + "})"
         return fmtstr.format(**self.__dict__)
 
 
 class AverageMeterDict(object):
-    def __init__(self, names: List, fmt: Optional[str] = ':f'):
-        self.dict = {
-            name: AverageMeter(name, fmt) for name in names
-        }
+    def __init__(self, names: List, fmt: Optional[str] = ":f"):
+        self.dict = {name: AverageMeter(name, fmt) for name in names}
 
     def reset(self):
         for meter in self.dict.values():
@@ -53,9 +52,7 @@ class AverageMeterDict(object):
             self.dict[name].update(acc, n)
 
     def average(self):
-        return {
-            name: meter.avg for name, meter in self.dict.items()
-        }
+        return {name: meter.avg for name, meter in self.dict.items()}
 
     def __getitem__(self, item):
         return self.dict[item]
@@ -63,7 +60,8 @@ class AverageMeterDict(object):
 
 class Meter(object):
     """Computes and stores the current value."""
-    def __init__(self, name: str, fmt: Optional[str] = ':f'):
+
+    def __init__(self, name: str, fmt: Optional[str] = ":f"):
         self.name = name
         self.fmt = fmt
         self.reset()
@@ -75,7 +73,7 @@ class Meter(object):
         self.val = val
 
     def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '}'
+        fmtstr = "{name} {val" + self.fmt + "}"
         return fmtstr.format(**self.__dict__)
 
 
@@ -88,11 +86,9 @@ class ProgressMeter(object):
     def display(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
-        print('\t'.join(entries))
+        print("\t".join(entries))
 
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))
-        fmt = '{:' + str(num_digits) + 'd}'
-        return '[' + fmt + '/' + fmt.format(num_batches) + ']'
-
-
+        fmt = "{:" + str(num_digits) + "d}"
+        return "[" + fmt + "/" + fmt.format(num_batches) + "]"

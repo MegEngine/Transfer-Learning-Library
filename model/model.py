@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, List, Dict, Sequence
+from typing import Optional, List, Dict, Sequence
 from megengine import tensor
 import megengine.module as nn
 import megengine.functional as F
@@ -39,8 +39,16 @@ class Classifier(nn.Module):
 
     """
 
-    def __init__(self, backbone: nn.Module, num_classes: int, bottleneck: Optional[nn.Module] = None,
-                 bottleneck_dim: Optional[int] = -1, head: Optional[nn.Module] = None, finetune=True, pool_layer=None):
+    def __init__(
+        self,
+        backbone: nn.Module,
+        num_classes: int,
+        bottleneck: Optional[nn.Module] = None,
+        bottleneck_dim: Optional[int] = -1,
+        head: Optional[nn.Module] = None,
+        finetune=True,
+        pool_layer=None,
+    ):
         super(Classifier, self).__init__()
         self.backbone = backbone
         self.num_classes = num_classes
@@ -82,10 +90,13 @@ class Classifier(nn.Module):
 
     def get_parameters(self, base_lr=1.0) -> List[Dict]:
         """A parameter list which decides optimization hyper-parameters,
-            such as the relative learning rate of each layer
+        such as the relative learning rate of each layer
         """
         params = [
-            {"params": self.backbone.parameters(), "lr": 0.1 * base_lr if self.finetune else 1.0 * base_lr},
+            {
+                "params": self.backbone.parameters(),
+                "lr": 0.1 * base_lr if self.finetune else 1.0 * base_lr,
+            },
             {"params": self.bottleneck.parameters(), "lr": 1.0 * base_lr},
             {"params": self.head.parameters(), "lr": 1.0 * base_lr},
         ]
@@ -96,11 +107,11 @@ class Classifier(nn.Module):
 class ImageClassifier(Classifier):
     def __init__(self, backbone, num_classes, bottleneck_dim=256, **kwargs):
         bottleneck = nn.Sequential(
-            nn.Linear(backbone.out_features, bottleneck_dim),
-            nn.ReLU(),
-            nn.Dropout(0.5)
+            nn.Linear(backbone.out_features, bottleneck_dim), nn.ReLU(), nn.Dropout(0.5)
         )
-        super(ImageClassifier, self).__init__(backbone, num_classes, bottleneck, bottleneck_dim, **kwargs)
+        super(ImageClassifier, self).__init__(
+            backbone, num_classes, bottleneck, bottleneck_dim, **kwargs
+        )
 
 
 class MultipleKernelMaximumMeanDiscrepancy(nn.Module):
@@ -169,19 +180,23 @@ class MultipleKernelMaximumMeanDiscrepancy(nn.Module):
     def forward(self, z_s, z_t):
         features = F.concat([z_s, z_t], axis=0)
         batch_size = int(z_s.shape[0])
-        self.index_matrix = _update_index_matrix(batch_size, self.index_matrix, self.linear)
+        self.index_matrix = _update_index_matrix(
+            batch_size, self.index_matrix, self.linear
+        )
 
-
-        kernel_matrix = sum([kernel(features) for kernel in self.kernels])  # Add up the matrix of each kernel
+        kernel_matrix = sum(
+            [kernel(features) for kernel in self.kernels]
+        )  # Add up the matrix of each kernel
         # Add 2 / (n-1) to make up for the value on the diagonal
         # to ensure loss is positive in the non-linear version
-        loss = (kernel_matrix * self.index_matrix).sum() + 2. / float(batch_size - 1)
+        loss = (kernel_matrix * self.index_matrix).sum() + 2.0 / float(batch_size - 1)
 
         return loss
 
 
-def _update_index_matrix(batch_size: int, index_matrix=None,
-                         linear: Optional[bool] = True):
+def _update_index_matrix(
+    batch_size: int, index_matrix=None, linear: Optional[bool] = True
+):
     r"""
     Update the `index_matrix` which convert `kernel_matrix` to loss.
     If `index_matrix` is a tensor with shape (2 x batch_size, 2 x batch_size), then return `index_matrix`.
@@ -193,20 +208,26 @@ def _update_index_matrix(batch_size: int, index_matrix=None,
             for i in range(batch_size):
                 s1, s2 = i, (i + 1) % batch_size
                 t1, t2 = s1 + batch_size, s2 + batch_size
-                index_matrix[s1, s2] = 1. / float(batch_size)
-                index_matrix[t1, t2] = 1. / float(batch_size)
-                index_matrix[s1, t2] = -1. / float(batch_size)
-                index_matrix[s2, t1] = -1. / float(batch_size)
+                index_matrix[s1, s2] = 1.0 / float(batch_size)
+                index_matrix[t1, t2] = 1.0 / float(batch_size)
+                index_matrix[s1, t2] = -1.0 / float(batch_size)
+                index_matrix[s2, t1] = -1.0 / float(batch_size)
         else:
             for i in range(batch_size):
                 for j in range(batch_size):
                     if i != j:
-                        index_matrix[i][j] = 1. / float(batch_size * (batch_size - 1))
-                        index_matrix[i + batch_size][j + batch_size] = 1. / float(batch_size * (batch_size - 1))
+                        index_matrix[i][j] = 1.0 / float(batch_size * (batch_size - 1))
+                        index_matrix[i + batch_size][j + batch_size] = 1.0 / float(
+                            batch_size * (batch_size - 1)
+                        )
             for i in range(batch_size):
                 for j in range(batch_size):
-                    index_matrix[i][j + batch_size] = -1. / float(batch_size * batch_size)
-                    index_matrix[i + batch_size][j] = -1. / float(batch_size * batch_size)
+                    index_matrix[i][j + batch_size] = -1.0 / float(
+                        batch_size * batch_size
+                    )
+                    index_matrix[i + batch_size][j] = -1.0 / float(
+                        batch_size * batch_size
+                    )
     return index_matrix
 
 
@@ -235,7 +256,8 @@ class GaussianKernel(nn.Module):
         sigma (float, optional): bandwidth :math:`\sigma`. Default: None
         track_running_stats (bool, optional): If ``True``, this module tracks the running mean of :math:`\sigma^2`.
           Otherwise, it won't track such statistics and always uses fix :math:`\sigma^2`. Default: ``True``
-        alpha (float, optional): :math:`\alpha` which decides the magnitude of :math:`\sigma^2` when track_running_stats is set to ``True``
+        alpha (float, optional): :math:`\alpha` which decides the
+        magnitude of :math:`\sigma^2` when track_running_stats is set to ``True``
 
     Inputs:
         - X (tensor): input group :math:`X`
@@ -245,8 +267,12 @@ class GaussianKernel(nn.Module):
         - Outputs: :math:`(minibatch, minibatch)`
     """
 
-    def __init__(self, sigma: Optional[float] = None, track_running_stats: Optional[bool] = True,
-                 alpha: Optional[float] = 1.):
+    def __init__(
+        self,
+        sigma: Optional[float] = None,
+        track_running_stats: Optional[bool] = True,
+        alpha: Optional[float] = 1.0,
+    ):
         super(GaussianKernel, self).__init__()
         assert track_running_stats or sigma is not None
         self.sigma_square = tensor(sigma * sigma) if sigma is not None else None

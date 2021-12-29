@@ -7,13 +7,13 @@ import numpy as np
 from PIL import Image
 from typing import Optional, Callable, Tuple, Any, List
 from megengine.data import dataset
-from download import download_and_extract_archive
+from dataset.download import download_and_extract_archive
 
 
 def pil_loader(path: str) -> Image.Image:
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         img = Image.open(f)
-        return np.array(img.convert('RGB'))
+        return np.array(img.convert("RGB"))
 
 
 class ImageList(dataset.VisionDataset):
@@ -38,13 +38,20 @@ class ImageList(dataset.VisionDataset):
         If your data_list_file has different formats, please over-ride :meth:`~ImageList.parse_data_file`.
     """
 
-    def __init__(self, root: str, classes: List[str], data_list_file: str,
-                 transform: Optional[Callable] = None, target_transform: Optional[Callable] = None):
-        super().__init__(root) # , transform=transform, target_transform=target_transform)
+    def __init__(
+        self,
+        root: str,
+        classes: List[str],
+        data_list_file: str,
+        transform: Optional[Callable] = None,
+        target_transform: Optional[Callable] = None,
+    ):
+        super().__init__(
+            root
+        )  # , transform=transform, target_transform=target_transform)
         self.samples = self.parse_data_file(data_list_file)
         self.classes = classes
-        self.class_to_idx = {cls: idx
-                             for idx, cls in enumerate(self.classes)}
+        self.class_to_idx = {cls: idx for idx, cls in enumerate(self.classes)}
         self.loader = pil_loader
         self.data_list_file = data_list_file
 
@@ -77,7 +84,7 @@ class ImageList(dataset.VisionDataset):
             for line in f.readlines():
                 split_line = line.split()
                 target = split_line[-1]
-                path = ' '.join(split_line[:-1])
+                path = " ".join(split_line[:-1])
                 if not os.path.isabs(path):
                     path = os.path.join(self.root, path)
                 target = int(target)
@@ -92,7 +99,7 @@ class ImageList(dataset.VisionDataset):
     @classmethod
     def domains(cls):
         """All possible domain in this dataset"""
-        raise NotImplemented
+        raise NotImplementedError
 
 
 def download(root: str, file_name: str, archive_name: str, url_link: str):
@@ -114,11 +121,18 @@ def download(root: str, file_name: str, archive_name: str, url_link: str):
         # if os.path.exists(os.path.join(root, archive_name)):
         #     os.remove(os.path.join(root, archive_name))
         try:
-            download_and_extract_archive(url_link, download_root=root, filename=archive_name, remove_finished=False)
+            download_and_extract_archive(
+                url_link,
+                download_root=root,
+                filename=archive_name,
+                remove_finished=False,
+            )
         except Exception:
             print("Fail to download {} from url link {}".format(archive_name, url_link))
-            print('Please check you internet connection.'
-                  "Simply trying again may be fine.")
+            print(
+                "Please check you internet connection."
+                "Simply trying again may be fine."
+            )
             exit(0)
 
 
