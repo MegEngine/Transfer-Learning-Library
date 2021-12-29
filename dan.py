@@ -221,7 +221,7 @@ if __name__ == '__main__':
         epochs = 20
         iters_per_epoch = 500
         log = 'logs/dan/Office31_D2A'
-        lr = 0.003
+        lr = 0.001 # NOTE lr is 0.003 in pytorch version
         lr_decay = 0.75
         lr_gamma = 0.0003
         momentum = 0.9
