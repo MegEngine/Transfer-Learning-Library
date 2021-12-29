@@ -1,0 +1,4 @@
+__pycache__/
+data/
+classifier.best.ckpt
+classifier.latest.ckpt
