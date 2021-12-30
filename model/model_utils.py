@@ -4,21 +4,12 @@ import megengine.hub
 import megengine.functional as F
 
 
-def load_torch_resnet50_pretrained_dict():
-    from torchvision.models.utils import load_state_dict_from_url
-    from torchvision.models.resnet import model_urls
-
-    pretrained_dict = load_state_dict_from_url(model_urls["resnet50"], progress=True)
-    return {k: v.detach().numpy() for k, v in pretrained_dict.items()}
-
-
 def load_backbone():
-    model = megengine.hub.load("megengine/models", "resnet50", pretrained=False)
-    pretrained_dict = load_torch_resnet50_pretrained_dict()
-    model.load_state_dict(pretrained_dict, strict=True)
+    model = megengine.hub.load("megengine/models", "resnet50", pretrained=True)
     model.out_features = model.fc.in_features
 
     def forward(self, x):
+        x = x[:, ::-1, :, :]  # N(RBG)HW -> N(BGR)HW
         x = self.conv1(x)
         x = self.bn1(x)
         x = F.relu(x)
